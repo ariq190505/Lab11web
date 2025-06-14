@@ -404,26 +404,17 @@ public function add()
 ## 📱 Screenshots Praktikum
 
 ### Modul 4 - Authentication
-![Login Form](screenshots/login_form.png)
+![image](https://github.com/user-attachments/assets/a981f0e6-c8c7-471c-a363-40c52c669dd6)
 *Form login dengan validasi*
 
-![Admin Protected](screenshots/admin_protected.png)
-*Area admin yang terproteksi dengan auth filter*
-
 ### Modul 5 - Pagination & Search
-![Pagination](screenshots/pagination.png)
+![image](https://github.com/user-attachments/assets/9d5d90b9-38b1-49f0-9445-61539df3d53c)
 *Pagination dengan 10 artikel per halaman*
 
-![Search Function](screenshots/search_function.png)
+![image](https://github.com/user-attachments/assets/7922fc9d-9971-4ab8-9a58-49a05e0b4afa)
 *Fitur pencarian di multiple field*
 
 ### Modul 6 - Upload Gambar
-![Upload Form](screenshots/upload_form.png)
-*Form upload gambar dengan preview*
-
-![Admin with Images](screenshots/admin_with_images.png)
-*Admin panel dengan kolom gambar dan thumbnail*
-
 ![Article with Image](screenshots/article_with_image.png)
 *Detail artikel dengan gambar*
 
@@ -454,102 +445,8 @@ public function add()
 ### **Hasil Akhir:**
 Aplikasi web lengkap dengan sistem manajemen artikel yang mencakup authentication, CRUD operations, file upload, pagination, search, dan responsive design. Semua modul terintegrasi dengan baik dan siap untuk deployment production.
 
----
+## Author
 
-## 🧪 Testing & Demonstrasi
-
-### URL Testing untuk Setiap Modul:
-
-#### **Modul 4 (Authentication)**
-- **Login**: `http://localhost:8080/simplelogin` (admin/admin123)
-- **Logout**: `http://localhost:8080/simplelogout`
-- **Protected Admin**: `http://localhost:8080/admin/artikel` (requires login)
-
-#### **Modul 5 (Pagination & Search)**
-- **Admin Panel**: `http://localhost:8080/admin/artikel`
-- **Search Test**: Gunakan form pencarian di admin panel
-- **Pagination Test**: Navigasi antar halaman
-
-#### **Modul 6 (Upload Gambar)**
-- **Add Article**: `http://localhost:8080/admin/artikel/add`
-- **Edit Article**: `http://localhost:8080/admin/artikel/edit/[id]`
-- **View with Image**: `http://localhost:8080/artikel/[slug]`
-
-### Demo Data Generator:
-- **Create Images**: `http://localhost:8080/dummydata/createImages`
-- **Create Articles**: `http://localhost:8080/dummydata/createArticles`
-
----
-
-## 📱 Screenshots
-
-### Modul 4 - Authentication
-![Login Form](screenshots/login_form.png)
-*Form login dengan validasi dan session management*
-
-![Admin Protected](screenshots/admin_protected.png)
-*Area admin yang terproteksi dengan auth filter*
-
-### Modul 5 - Pagination & Search
-![Pagination](screenshots/pagination.png)
-*Pagination dengan 10 artikel per halaman*
-
-![Search Function](screenshots/search_function.png)
-*Fitur pencarian di multiple field dengan reset*
-
-### Modul 6 - Upload Gambar
-![Upload Form](screenshots/upload_form.png)
-*Form upload gambar dengan file input dan validasi*
-
-![Admin with Images](screenshots/admin_with_images.png)
-*Admin panel dengan kolom gambar dan thumbnail preview*
-
-![Article with Image](screenshots/article_with_image.png)
-*Detail artikel dengan gambar yang responsive*
-
----
-
-## 🎓 Kesimpulan
-
-### **Fitur yang Berhasil Diimplementasikan:**
-
-#### ✅ **Modul 4 - Authentication & Authorization**
-- Login/logout system dengan session management
-- Auth filter untuk proteksi admin area
-- Password hashing dengan bcrypt
-- Flash messages untuk user feedback
-
-#### ✅ **Modul 5 - Pagination dan Pencarian**
-- Pagination dengan 10 artikel per halaman
-- Search di multiple field (judul, isi, kategori)
-- Pagination links yang preserve search parameters
-- Reset search functionality
-
-#### ✅ **Modul 6 - Upload Gambar**
-- File upload dengan validasi (JPG, PNG, GIF)
-- Image preview di admin panel (thumbnails)
-- File management (auto delete old files)
-- Image display di detail artikel
-- Auto directory creation
-
-### **Skills yang Dikembangkan:**
-- ✅ **Authentication & Security** - Session management, password hashing
-- ✅ **Database Optimization** - Pagination, search queries
-- ✅ **File Management** - Upload, validation, cleanup
-- ✅ **User Experience** - Responsive design, feedback messages
-- ✅ **Error Handling** - Graceful degradation, validation
-
-### **Teknologi yang Digunakan:**
-- **Backend**: CodeIgniter 4, PHP 8+
-- **Database**: MySQL dengan ORM
-- **Frontend**: HTML5, CSS3, Responsive Design
-- **Security**: Session management, CSRF protection, file validation
-
-### **Hasil Akhir:**
-Aplikasi web lengkap dengan sistem manajemen artikel yang mencakup authentication, pagination, search, dan file upload. Semua modul terintegrasi dengan baik dan siap untuk deployment production.
-
----
-
-**© 2024 - Lab7Web Praktikum CodeIgniter 4**
-**Universitas Pelita Bangsa - Pemrograman Web 2**
-
+### Nama: [Ariq Ibtihal]
+### NIM: [312310446]
+### Kelas: [TI.23.A5]
