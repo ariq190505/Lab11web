@@ -8,7 +8,7 @@
     </div>
 <?php endif; ?>
 
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     <p>
         <label for="judul">Judul Artikel:</label>
         <input type="text" id="judul" name="judul" placeholder="Masukkan judul artikel" required value="<?= old('judul'); ?>">
@@ -16,6 +16,11 @@
     <p>
         <label for="isi">Isi Artikel:</label>
         <textarea id="isi" name="isi" cols="50" rows="10" placeholder="Masukkan isi artikel"><?= old('isi'); ?></textarea>
+    </p>
+    <p>
+        <label for="gambar">Gambar Artikel:</label>
+        <input type="file" id="gambar" name="gambar" accept="image/*">
+        <small>Format yang didukung: JPG, PNG, GIF (Max: 2MB)</small>
     </p>
     <p>
         <label for="status">Status:</label>

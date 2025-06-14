@@ -8,7 +8,7 @@
     </div>
 <?php endif; ?>
 
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     <p>
         <label for="judul">Judul Artikel:</label>
         <input type="text" id="judul" name="judul" value="<?= old('judul', $data['judul']); ?>" placeholder="Masukkan judul artikel" required>
@@ -16,6 +16,17 @@
     <p>
         <label for="isi">Isi Artikel:</label>
         <textarea id="isi" name="isi" cols="50" rows="10" placeholder="Masukkan isi artikel"><?= old('isi', $data['isi']); ?></textarea>
+    </p>
+    <p>
+        <label for="gambar">Gambar Artikel:</label>
+        <?php if (!empty($data['gambar'])): ?>
+            <div class="current-image">
+                <img src="<?= base_url('/gambar/' . $data['gambar']); ?>" alt="Current Image" style="max-width: 200px; height: auto; display: block; margin: 5px 0;">
+                <small>Gambar saat ini: <?= $data['gambar']; ?></small>
+            </div>
+        <?php endif; ?>
+        <input type="file" id="gambar" name="gambar" accept="image/*">
+        <small>Kosongkan jika tidak ingin mengubah gambar. Format: JPG, PNG, GIF (Max: 2MB)</small>
     </p>
     <p>
         <label for="status">Status:</label>

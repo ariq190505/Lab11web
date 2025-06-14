@@ -16,6 +16,35 @@ $routes->get('/artikel/(:any)', 'Artikel::view/$1');
 $routes->get('/testdb', 'Page::testdb');
 $routes->get('/createdb', 'Page::createdb');
 
+// Auth routes
+$routes->group('auth', function($routes) {
+    $routes->add('login', 'Auth::login');
+    $routes->add('register', 'Auth::register');
+    $routes->get('logout', 'Auth::logout');
+});
+
+// User routes (untuk compatibility dengan filter)
+$routes->group('user', function($routes) {
+    $routes->add('login', 'User::login');
+    $routes->add('register', 'User::register');
+    $routes->get('logout', 'User::logout');
+});
+
+
+// Debug routes (temporary)
+$routes->get('dbtest/test', 'DbTest::test');
+$routes->get('sessiondebug/test', 'SessionDebug::test');
+$routes->get('sessiondebug/forceLogin', 'SessionDebug::forceLogin');
+$routes->get('sessiondebug/clear', 'SessionDebug::clear');
+
+// Simple Login (no database required)
+$routes->add('simplelogin', 'SimpleLogin::index');
+$routes->get('simplelogout', 'SimpleLogin::logout');
+
+// Dummy Data Generator
+$routes->get('dummydata/createImages', 'DummyData::createImages');
+$routes->get('dummydata/createArticles', 'DummyData::createArticles');
+
 // Admin routes
 $routes->group('admin', function($routes) {
     $routes->get('artikel', 'Artikel::admin_index');

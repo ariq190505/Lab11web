@@ -15,6 +15,7 @@
             <a href="<?= base_url('/admin/artikel');?>">Artikel</a>
             <a href="<?= base_url('/admin/artikel/add');?>">Tambah Artikel</a>
             <a href="<?= base_url('/');?>" target="_blank">Lihat Website</a>
+            <a href="<?= base_url('/user/logout');?>" style="float: right;">Logout (<?= session()->get('username') ?>)</a>
         </nav>
         <section id="wrapper">
             <section id="main" style="width: 100%; float: none;">

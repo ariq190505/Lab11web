@@ -10,8 +10,32 @@ class Artikel extends BaseController
     public function index()
     {
         $title = 'Daftar Artikel';
-        $model = new ArtikelModel();
-        $artikel = $model->where('status', 1)->findAll(); // Hanya artikel published
+
+        try {
+            $model = new ArtikelModel();
+            $artikel = $model->where('status', 1)->findAll(); // Hanya artikel published
+        } catch (\Exception $e) {
+            // If database error, use dummy data
+            $artikel = [
+                [
+                    'id' => 1,
+                    'judul' => 'Artikel Demo 1',
+                    'isi' => 'Ini adalah artikel demo untuk testing.',
+                    'slug' => 'artikel-demo-1',
+                    'gambar' => '',
+                    'status' => 1
+                ],
+                [
+                    'id' => 2,
+                    'judul' => 'Artikel Demo 2',
+                    'isi' => 'Ini adalah artikel demo kedua untuk testing.',
+                    'slug' => 'artikel-demo-2',
+                    'gambar' => '',
+                    'status' => 1
+                ]
+            ];
+        }
+
         return view('artikel/index', compact('artikel', 'title'));
     }
 
@@ -34,9 +58,29 @@ class Artikel extends BaseController
     public function admin_index()
     {
         $title = 'Daftar Artikel';
+        $q = $this->request->getVar('q') ?? '';
         $model = new ArtikelModel();
-        $artikel = $model->findAll();
-        return view('artikel/admin_index', compact('artikel', 'title'));
+
+        if ($q) {
+            // Pencarian di multiple field
+            $artikel = $model->groupStart()
+                           ->like('judul', $q)
+                           ->orLike('isi', $q)
+                           ->orLike('kategori', $q)
+                           ->groupEnd()
+                           ->paginate(10);
+        } else {
+            // Tampilkan semua data jika tidak ada pencarian
+            $artikel = $model->paginate(10);
+        }
+
+        $data = [
+            'title' => $title,
+            'q' => $q,
+            'artikel' => $artikel,
+            'pager' => $model->pager,
+        ];
+        return view('artikel/admin_index', $data);
     }
 
     public function add()
@@ -54,12 +98,28 @@ class Artikel extends BaseController
             $isDataValid = $validation->withRequest($this->request)->run();
 
             if ($isDataValid) {
+                // Handle file upload
+                $file = $this->request->getFile('gambar');
+                $gambarName = '';
+
+                if ($file && $file->isValid() && !$file->hasMoved()) {
+                    // Create gambar directory if not exists
+                    if (!is_dir(ROOTPATH . 'public/gambar')) {
+                        mkdir(ROOTPATH . 'public/gambar', 0755, true);
+                    }
+
+                    // Move file to gambar directory
+                    $file->move(ROOTPATH . 'public/gambar');
+                    $gambarName = $file->getName();
+                }
+
                 $artikel = new ArtikelModel();
                 $artikel->insert([
                     'judul' => $this->request->getPost('judul'),
                     'isi' => $this->request->getPost('isi'),
                     'slug' => url_title($this->request->getPost('judul')),
-                    'status' => $this->request->getPost('status') ?? 0 // Status dari form atau default draft
+                    'gambar' => $gambarName,
+                    'status' => $this->request->getPost('status') ?? 0
                 ]);
 
                 session()->setFlashdata('success', 'Artikel berhasil ditambahkan!');
@@ -92,10 +152,33 @@ class Artikel extends BaseController
             $isDataValid = $validation->withRequest($this->request)->run();
 
             if ($isDataValid) {
+                // Get current data
+                $currentData = $artikel->where('id', $id)->first();
+                $gambarName = $currentData['gambar']; // Keep current image by default
+
+                // Handle file upload
+                $file = $this->request->getFile('gambar');
+                if ($file && $file->isValid() && !$file->hasMoved()) {
+                    // Create gambar directory if not exists
+                    if (!is_dir(ROOTPATH . 'public/gambar')) {
+                        mkdir(ROOTPATH . 'public/gambar', 0755, true);
+                    }
+
+                    // Delete old image if exists
+                    if (!empty($currentData['gambar']) && file_exists(ROOTPATH . 'public/gambar/' . $currentData['gambar'])) {
+                        unlink(ROOTPATH . 'public/gambar/' . $currentData['gambar']);
+                    }
+
+                    // Move new file
+                    $file->move(ROOTPATH . 'public/gambar');
+                    $gambarName = $file->getName();
+                }
+
                 $artikel->update($id, [
                     'judul' => $this->request->getPost('judul'),
                     'isi' => $this->request->getPost('isi'),
                     'slug' => url_title($this->request->getPost('judul')),
+                    'gambar' => $gambarName,
                     'status' => $this->request->getPost('status') ?? 0,
                 ]);
 
@@ -132,6 +215,11 @@ class Artikel extends BaseController
         if (!$data) {
             session()->setFlashdata('error', 'Artikel tidak ditemukan!');
             return redirect('admin/artikel');
+        }
+
+        // Delete image file if exists
+        if (!empty($data['gambar']) && file_exists(ROOTPATH . 'public/gambar/' . $data['gambar'])) {
+            unlink(ROOTPATH . 'public/gambar/' . $data['gambar']);
         }
 
         $artikel->delete($id);

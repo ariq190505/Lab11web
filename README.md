@@ -543,5 +543,306 @@ This project is created for educational purposes as part of Web Programming 2 co
 
 ---
 
+## 🔐 Modul 4 - Authentication & Authorization
+
+### Tujuan
+Mengimplementasikan sistem login dan logout dengan session management untuk melindungi area admin.
+
+### Langkah-langkah Implementasi
+
+#### 4.1 Membuat Tabel User
+```sql
+CREATE TABLE user (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    useremail VARCHAR(100) NOT NULL,
+    userpassword VARCHAR(255) NOT NULL
+);
+
+INSERT INTO user (username, useremail, userpassword) VALUES
+('admin', 'admin@lab7web.com', '$2y$10$...');
+```
+
+#### 4.2 Membuat User Model
+**File**: `app/Models/UserModel.php`
+```php
+<?php
+namespace App\Models;
+use CodeIgniter\Model;
+
+class UserModel extends Model
+{
+    protected $table = 'user';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['username', 'useremail', 'userpassword'];
+}
+```
+
+#### 4.3 Membuat Auth Controller
+**File**: `app/Controllers/User.php`
+```php
+public function login()
+{
+    if ($this->request->getMethod() === 'post') {
+        $username = $this->request->getPost('username');
+        $password = $this->request->getPost('password');
+
+        $userModel = new UserModel();
+        $user = $userModel->where('username', $username)->first();
+
+        if ($user && password_verify($password, $user['userpassword'])) {
+            session()->set([
+                'user_id' => $user['id'],
+                'username' => $user['username'],
+                'logged_in' => true
+            ]);
+            return redirect()->to('/admin/artikel');
+        } else {
+            session()->setFlashdata('error', 'Username atau password salah!');
+        }
+    }
+    return view('auth/login', ['title' => 'Login']);
+}
+```
+
+#### 4.4 Membuat Auth Filter
+**File**: `app/Filters/Auth.php`
+```php
+<?php
+namespace App\Filters;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\Filters\FilterInterface;
+
+class Auth implements FilterInterface
+{
+    public function before(RequestInterface $request, $arguments = null)
+    {
+        if (!session()->get('logged_in')) {
+            return redirect()->to('/user/login');
+        }
+    }
+
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        // Do something here
+    }
+}
+```
+
+**✅ Hasil**: Sistem authentication dengan session management yang aman.
+
+---
+
+## 📄 Modul 5 - Pagination dan Pencarian
+
+### Tujuan
+Mengimplementasikan pagination untuk membatasi data per halaman dan fitur pencarian untuk memfilter artikel.
+
+### Langkah-langkah Implementasi
+
+#### 5.1 Update Controller untuk Pagination
+**File**: `app/Controllers/Artikel.php`
+```php
+public function admin_index()
+{
+    $title = 'Daftar Artikel';
+    $q = $this->request->getVar('q') ?? '';
+    $model = new ArtikelModel();
+
+    if ($q) {
+        $artikel = $model->groupStart()
+                       ->like('judul', $q)
+                       ->orLike('isi', $q)
+                       ->orLike('kategori', $q)
+                       ->groupEnd()
+                       ->paginate(10);
+    } else {
+        $artikel = $model->paginate(10);
+    }
+
+    $data = [
+        'title' => $title,
+        'q' => $q,
+        'artikel' => $artikel,
+        'pager' => $model->pager,
+    ];
+    return view('artikel/admin_index', $data);
+}
+```
+
+#### 5.2 Form Pencarian
+**File**: `app/Views/artikel/admin_index.php`
+```php
+<form method="get" class="form-search">
+    <input type="text" name="q" value="<?= $q; ?>" placeholder="Cari data">
+    <input type="submit" value="Cari" class="btn btn-primary">
+    <?php if($q): ?>
+        <a href="<?= base_url('/admin/artikel'); ?>" class="btn btn-secondary">Reset</a>
+    <?php endif; ?>
+</form>
+
+<?php if($q): ?>
+    <div class="search-info">
+        <p><strong>Hasil pencarian untuk:</strong> "<?= esc($q); ?>"</p>
+    </div>
+<?php endif; ?>
+```
+
+#### 5.3 Pagination Links
+```php
+<?= $pager->only(['q'])->links(); ?>
+```
+
+**✅ Hasil**:
+- Pagination dengan 10 artikel per halaman
+- Pencarian di multiple field (judul, isi, kategori)
+- Parameter pencarian dipertahankan di pagination
+
+---
+
+## 📸 Modul 6 - Upload Gambar
+
+### Tujuan
+Menambahkan fitur upload gambar pada artikel dengan validasi file dan manajemen file yang proper.
+
+### Langkah-langkah Implementasi
+
+#### 6.1 Update Controller untuk Upload
+**File**: `app/Controllers/Artikel.php`
+```php
+public function add()
+{
+    if ($this->request->getMethod() === 'post') {
+        $validation = \Config\Services::validation();
+        $validation->setRules(['judul' => 'required']);
+        $isDataValid = $validation->withRequest($this->request)->run();
+
+        if ($isDataValid) {
+            $file = $this->request->getFile('gambar');
+            $gambarName = '';
+
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                if (!is_dir(ROOTPATH . 'public/gambar')) {
+                    mkdir(ROOTPATH . 'public/gambar', 0755, true);
+                }
+                $file->move(ROOTPATH . 'public/gambar');
+                $gambarName = $file->getName();
+            }
+
+            $artikel = new ArtikelModel();
+            $artikel->insert([
+                'judul' => $this->request->getPost('judul'),
+                'isi' => $this->request->getPost('isi'),
+                'slug' => url_title($this->request->getPost('judul')),
+                'gambar' => $gambarName,
+                'status' => $this->request->getPost('status') ?? 0
+            ]);
+
+            return redirect('admin/artikel');
+        }
+    }
+    return view('artikel/form_add', ['title' => 'Tambah Artikel']);
+}
+```
+
+#### 6.2 Update Form dengan File Input
+**File**: `app/Views/artikel/form_add.php`
+```php
+<form action="" method="post" enctype="multipart/form-data">
+    <p>
+        <label for="judul">Judul Artikel:</label>
+        <input type="text" name="judul" required>
+    </p>
+    <p>
+        <label for="isi">Isi Artikel:</label>
+        <textarea name="isi" cols="50" rows="10"></textarea>
+    </p>
+    <p>
+        <label for="gambar">Gambar Artikel:</label>
+        <input type="file" name="gambar" accept="image/*">
+        <small>Format: JPG, PNG, GIF (Max: 2MB)</small>
+    </p>
+    <p>
+        <input type="submit" value="Simpan" class="btn btn-primary">
+    </p>
+</form>
+```
+
+#### 6.3 Menampilkan Gambar di Admin Panel
+**File**: `app/Views/artikel/admin_index.php`
+```php
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Gambar</th>
+            <th>Judul</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach($artikel as $row): ?>
+            <tr>
+                <td><?= $row['id']; ?></td>
+                <td>
+                    <?php if(!empty($row['gambar'])): ?>
+                        <img src="<?= base_url('/gambar/' . $row['gambar']); ?>"
+                             style="width: 60px; height: 40px; object-fit: cover;">
+                    <?php else: ?>
+                        <span>No Image</span>
+                    <?php endif; ?>
+                </td>
+                <td><?= $row['judul']; ?></td>
+                <td><?= $row['status'] ? 'Published' : 'Draft'; ?></td>
+                <td>
+                    <a href="<?= base_url('/admin/artikel/edit/' . $row['id']);?>">Edit</a>
+                    <a href="<?= base_url('/admin/artikel/delete/' . $row['id']);?>">Delete</a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+```
+
+**✅ Hasil**:
+- Upload gambar dengan validasi file
+- Preview gambar di admin panel
+- File management (hapus file lama saat update/delete)
+- Display gambar di detail artikel
+
+---
+
+## 🎯 Ringkasan Fitur Lengkap
+
+### ✅ **Modul 4 - Authentication**
+- Login/logout system
+- Session management
+- Auth filter untuk proteksi admin area
+- Password hashing dengan bcrypt
+
+### ✅ **Modul 5 - Pagination & Search**
+- Pagination dengan 10 item per halaman
+- Search di multiple field
+- Pagination links dengan parameter search
+- Reset search functionality
+
+### ✅ **Modul 6 - Upload Gambar**
+- File upload dengan validasi
+- Image preview di admin panel
+- File management (create/update/delete)
+- Support multiple image formats
+
+### 🚀 **Fitur Tambahan**
+- Responsive design
+- Flash messages
+- Form validation
+- Clean URLs dengan slug
+- Status badge (Published/Draft)
+- Error handling yang robust
+
+---
+
 **© 2024 - Lab7Web Praktikum CodeIgniter 4**
 
