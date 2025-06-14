@@ -1,4 +1,4 @@
-# Lab7Web - Praktikum Pemrograman Web 2
+# Lab11Web - Praktikum Pemrograman Web 2
 **Modul 4, 5, 6 - Authentication, Pagination & Upload Gambar**
 
 ## 📚 Informasi Praktikum
