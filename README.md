@@ -619,12 +619,6 @@ body {
 
 ### URL Testing untuk Setiap Modul:
 
-#### **Modul 1-3 (Basic Setup)**
-- **Home**: `http://localhost:8080/`
-- **About**: `http://localhost:8080/about`
-- **Contact**: `http://localhost:8080/contact`
-- **Artikel List**: `http://localhost:8080/artikel`
-
 #### **Modul 4 (Authentication)**
 - **Login**: `http://localhost:8080/simplelogin` (admin/admin123)
 - **Logout**: `http://localhost:8080/simplelogout`
@@ -671,15 +665,12 @@ body {
 ![image](https://github.com/user-attachments/assets/7922fc9d-9971-4ab8-9a58-49a05e0b4afa)
 *Fitur pencarian di multiple field*
 
-### Modul 6 - Upload Gambar
-![Article with Image](screenshots/article_with_image.png)
-*Detail artikel dengan gambar*
+### Modul 8 - Simple AJAX View
+![Screenshot 2025-06-16 213528](https://github.com/user-attachments/assets/82144764-8363-4f75-83b4-ad163d150425)
+*Tampilan sederhana dengan tabel data artikel*
 
-### Modul 8 - AJAX Implementation
 
-#### 8.1 Setup jQuery Library
-![jQuery Setup](screenshots/jquery_setup.png)
-*Download dan setup jQuery 3.6.0 dari CDN*
+#### Setup jQuery Library
 
 **Langkah-langkah:**
 1. **Download jQuery**: Menggunakan curl untuk download jQuery 3.6.0
@@ -692,9 +683,7 @@ body {
    ls -la public/assets/js/
    ```
 
-#### 8.2 Membuat AJAX Controller
-![AJAX Controller](screenshots/ajax_controller.png)
-*AjaxController.php dengan method CRUD lengkap*
+####  Membuat AJAX Controller
 
 **Langkah-langkah:**
 1. **Buat Controller**: `app/Controllers/AjaxController.php`
@@ -703,9 +692,7 @@ body {
 4. **Method getById()**: Mengambil artikel berdasarkan ID
 5. **Method create/update()**: CRUD operations lengkap
 
-#### 8.3 Konfigurasi Routes
-![Routes Configuration](screenshots/ajax_routes.png)
-*Konfigurasi routes untuk AJAX endpoints*
+#### Konfigurasi Routes
 
 **Routes yang ditambahkan:**
 ```php
@@ -721,58 +708,6 @@ $routes->group('ajax', function($routes) {
     $routes->post('update/(:num)', 'AjaxController::update/$1');
 });
 ```
-
-#### 8.4 Simple AJAX View
-![Simple AJAX View](screenshots/simple_ajax_view.png)
-*Tampilan sederhana dengan tabel data artikel*
-
-**Fitur:**
-- Tabel responsif dengan 5 artikel (ID 1-5)
-- Loading state saat fetch data
-- Status badge (Published/Draft)
-- Action buttons (View, Edit, Delete)
-- Konfirmasi delete dengan alert
-
-#### 8.5 Advanced AJAX View
-![Advanced AJAX View](screenshots/advanced_ajax_view.png)
-*Tampilan lengkap dengan action bar dan fitur tambahan*
-
-**Fitur Tambahan:**
-- Action bar dengan tombol Refresh dan Load All
-- Alert system dengan auto-hide
-- Smooth animations dan transitions
-- Better error handling
-- Professional styling
-
-#### 8.6 AJAX API Testing
-![AJAX API Test](screenshots/ajax_api_test.png)
-*Testing AJAX endpoints dengan halaman test*
-
-**Endpoints yang ditest:**
-- `GET /ajax/getData` - 5 artikel pertama
-- `GET /ajax/getAllData` - Semua artikel
-- `GET /ajax/getById/1` - Artikel by ID
-- `POST /ajax/delete/1` - Delete artikel
-
-#### 8.7 Responsive Design
-![Responsive Design](screenshots/responsive_design.png)
-*Tampilan responsif di berbagai ukuran layar*
-
-**Breakpoints:**
-- Desktop (>768px): Full layout
-- Tablet (≤768px): Adjusted spacing
-- Mobile (≤480px): Stacked buttons
-
-#### 8.8 Error Handling
-![Error Handling](screenshots/error_handling.png)
-*Error handling dan user feedback*
-
-**Error States:**
-- Network errors
-- Server errors
-- Empty data states
-- Loading states
-
 ---
 
 ## 🎓 Kesimpulan Pembelajaran
