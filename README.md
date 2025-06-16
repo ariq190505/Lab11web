@@ -11,10 +11,11 @@
 1. [Modul 4 - Authentication & Authorization](#modul-4---authentication--authorization)
 2. [Modul 5 - Pagination dan Pencarian](#modul-5---pagination-dan-pencarian)
 3. [Modul 6 - Upload Gambar](#modul-6---upload-gambar)
-4. [Setup & Konfigurasi](#setup--konfigurasi)
-5. [Testing & Demonstrasi](#testing--demonstrasi)
-6. [Screenshots](#screenshots)
-7. [Kesimpulan](#kesimpulan)
+4. [Modul 8 - AJAX Implementation](#modul-8---ajax-implementation)
+5. [Setup & Konfigurasi](#setup--konfigurasi)
+6. [Testing & Demonstrasi](#testing--demonstrasi)
+7. [Screenshots](#screenshots)
+8. [Kesimpulan](#kesimpulan)
 
 ---
 
@@ -340,6 +341,241 @@ public function add()
 
 ---
 
+## 🔄 Modul 8 - AJAX Implementation
+
+### Tujuan
+Mengimplementasikan operasi CRUD menggunakan AJAX dengan jQuery untuk memberikan pengalaman user yang lebih responsif tanpa reload halaman.
+
+### Langkah-langkah Implementasi
+
+#### 8.1 Setup jQuery Library
+**Download jQuery 3.6.0:**
+```bash
+curl -o public/assets/js/jquery-3.6.0.min.js https://code.jquery.com/jquery-3.6.0.min.js
+```
+
+**Struktur Folder Assets:**
+```
+public/
+├── assets/
+│   ├── js/
+│   │   └── jquery-3.6.0.min.js
+│   └── css/
+└── ...
+```
+
+#### 8.2 Membuat AJAX Controller
+**File**: `app/Controllers/AjaxController.php`
+```php
+<?php
+namespace App\Controllers;
+use CodeIgniter\Controller;
+use App\Models\ArtikelModel;
+
+class AjaxController extends Controller
+{
+    public function index()
+    {
+        return view('ajax/index');
+    }
+
+    public function getData()
+    {
+        $model = new ArtikelModel();
+        $data = $model->findAll();
+        return $this->response->setJSON($data);
+    }
+
+    public function delete($id)
+    {
+        $model = new ArtikelModel();
+        $result = $model->delete($id);
+
+        $data = [
+            'status' => $result ? 'OK' : 'ERROR',
+            'message' => $result ? 'Data berhasil dihapus' : 'Gagal menghapus data'
+        ];
+
+        return $this->response->setJSON($data);
+    }
+
+    public function getById($id)
+    {
+        $model = new ArtikelModel();
+        $data = $model->find($id);
+
+        if ($data) {
+            return $this->response->setJSON([
+                'status' => 'OK',
+                'data' => $data
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status' => 'ERROR',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+    }
+}
+```
+
+#### 8.3 Update Routes untuk AJAX
+**File**: `app/Config/Routes.php`
+```php
+// AJAX routes
+$routes->group('ajax', function($routes) {
+    $routes->get('/', 'AjaxController::index');
+    $routes->get('getData', 'AjaxController::getData');
+    $routes->get('getById/(:num)', 'AjaxController::getById/$1');
+    $routes->post('delete/(:num)', 'AjaxController::delete/$1');
+    $routes->post('create', 'AjaxController::create');
+    $routes->post('update/(:num)', 'AjaxController::update/$1');
+});
+```
+
+#### 8.4 Membuat AJAX Views
+**File**: `app/Views/ajax/simple_view.php` - View sederhana untuk demonstrasi AJAX
+```php
+<?= $this->include('template/header'); ?>
+
+<div class="container">
+    <div class="page-header">
+        <h1>Data Artikel</h1>
+    </div>
+
+    <div class="table-container">
+        <table class="table-data" id="artikelTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Judul</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="4" class="loading">Loading data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="<?= base_url('assets/js/jquery-3.6.0.min.js') ?>"></script>
+<script>
+$(document).ready(function() {
+    // Load data function
+    function loadData() {
+        $.ajax({
+            url: "<?= base_url('ajax/getData') ?>",
+            method: "GET",
+            dataType: "json",
+            success: function(data) {
+                var tableBody = "";
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        var row = data[i];
+                        var statusClass = row.status == 1 ? 'status-published' : 'status-draft';
+                        var statusText = row.status == 1 ? 'Published' : 'Draft';
+
+                        tableBody += '<tr>';
+                        tableBody += '<td><span class="id-number">' + row.id + '</span></td>';
+                        tableBody += '<td>' + (row.judul || 'No Title') + '</td>';
+                        tableBody += '<td><span class="status ' + statusClass + '">' + statusText + '</span></td>';
+                        tableBody += '<td>';
+                        tableBody += '<a href="<?= base_url('artikel/') ?>' + (row.slug || row.id) + '" class="btn btn-primary">View</a>';
+                        tableBody += '<a href="<?= base_url('admin/artikel/edit/') ?>' + row.id + '" class="btn btn-primary">Edit</a>';
+                        tableBody += '<a href="#" class="btn btn-danger btn-delete" data-id="' + row.id + '">Delete</a>';
+                        tableBody += '</td>';
+                        tableBody += '</tr>';
+                    }
+                } else {
+                    tableBody = '<tr><td colspan="4" style="text-align: center;">Tidak ada data artikel</td></tr>';
+                }
+                $('#artikelTable tbody').html(tableBody);
+            }
+        });
+    }
+
+    // Delete function
+    $(document).on('click', '.btn-delete', function(e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+
+        if (confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
+            $.ajax({
+                url: "<?= base_url('ajax/delete/') ?>" + id,
+                method: "POST",
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === 'OK') {
+                        alert('Artikel berhasil dihapus!');
+                        loadData();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                }
+            });
+        }
+    });
+
+    loadData(); // Load data on page ready
+});
+</script>
+
+<?= $this->include('template/footer'); ?>
+```
+
+#### 8.5 Implementasi Desain Responsif
+**Styling CSS untuk tampilan yang simpel dan elegan:**
+```css
+/* Clean & Elegant Design */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    line-height: 1.6;
+}
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.table-data thead th {
+    background: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 20px 15px;
+    text-align: left;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table-data tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table-data th, .table-data td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+}
+```
+
+**✅ Hasil**:
+- Interface AJAX yang simpel dan elegan
+- Tabel responsif dengan 5 artikel (ID 1-5)
+- Operasi CRUD tanpa reload halaman
+- Design yang clean dan professional
+- Error handling yang robust
+
+---
+
 ## 🎯 Ringkasan Fitur Lengkap
 
 ### ✅ **Modul 4 - Authentication**
@@ -360,6 +596,14 @@ public function add()
 - File management (create/update/delete)
 - Support multiple image formats
 
+### ✅ **Modul 8 - AJAX Implementation**
+- jQuery 3.6.0 integration
+- AJAX CRUD operations (Create, Read, Update, Delete)
+- Real-time data loading tanpa reload halaman
+- Modal interface untuk add/edit
+- JSON response handling
+- Error handling dan user feedback
+
 ### 🚀 **Fitur Tambahan**
 - Responsive design
 - Flash messages
@@ -367,6 +611,7 @@ public function add()
 - Clean URLs dengan slug
 - Status badge (Published/Draft)
 - Error handling yang robust
+- Interactive AJAX interface
 
 ---
 
@@ -395,6 +640,18 @@ public function add()
 - **Edit Article**: `http://localhost:8080/admin/artikel/edit/[id]`
 - **View with Image**: `http://localhost:8080/artikel/[slug]`
 
+#### **Modul 8 (AJAX Implementation)**
+- **AJAX Demo**: `http://localhost/Lab11Web/public/ajax`
+- **AJAX Artikel View**: `http://localhost/Lab11Web/public/ajax/artikel`
+- **Simple AJAX View**: `http://localhost/Lab11Web/public/ajax/simple`
+- **AJAX API Endpoints**:
+  - GET Data (5 pertama dari ID 1): `http://localhost/Lab11Web/public/ajax/getData`
+  - GET All Data (urutan ID 1 ke atas): `http://localhost/Lab11Web/public/ajax/getAllData`
+  - Get by ID: `http://localhost/Lab11Web/public/ajax/getById/[id]`
+  - Delete: `POST http://localhost/Lab11Web/public/ajax/delete/[id]`
+  - Create: `POST http://localhost/Lab11Web/public/ajax/create`
+  - Update: `POST http://localhost/Lab11Web/public/ajax/update/[id]`
+
 ### Demo Data Generator:
 - **Create Images**: `http://localhost:8080/dummydata/createImages`
 - **Create Articles**: `http://localhost:8080/dummydata/createArticles`
@@ -418,6 +675,104 @@ public function add()
 ![Article with Image](screenshots/article_with_image.png)
 *Detail artikel dengan gambar*
 
+### Modul 8 - AJAX Implementation
+
+#### 8.1 Setup jQuery Library
+![jQuery Setup](screenshots/jquery_setup.png)
+*Download dan setup jQuery 3.6.0 dari CDN*
+
+**Langkah-langkah:**
+1. **Download jQuery**: Menggunakan curl untuk download jQuery 3.6.0
+   ```bash
+   curl -o public/assets/js/jquery-3.6.0.min.js https://code.jquery.com/jquery-3.6.0.min.js
+   ```
+
+2. **Verifikasi File**: Memastikan jQuery berhasil didownload
+   ```bash
+   ls -la public/assets/js/
+   ```
+
+#### 8.2 Membuat AJAX Controller
+![AJAX Controller](screenshots/ajax_controller.png)
+*AjaxController.php dengan method CRUD lengkap*
+
+**Langkah-langkah:**
+1. **Buat Controller**: `app/Controllers/AjaxController.php`
+2. **Method getData()**: Mengambil 5 artikel pertama (ID 1-5)
+3. **Method delete()**: Menghapus artikel dengan response JSON
+4. **Method getById()**: Mengambil artikel berdasarkan ID
+5. **Method create/update()**: CRUD operations lengkap
+
+#### 8.3 Konfigurasi Routes
+![Routes Configuration](screenshots/ajax_routes.png)
+*Konfigurasi routes untuk AJAX endpoints*
+
+**Routes yang ditambahkan:**
+```php
+// AJAX routes
+$routes->group('ajax', function($routes) {
+    $routes->get('/', 'AjaxController::index');
+    $routes->get('simple', 'AjaxController::simple');
+    $routes->get('getData', 'AjaxController::getData');
+    $routes->get('getAllData', 'AjaxController::getAllData');
+    $routes->get('getById/(:num)', 'AjaxController::getById/$1');
+    $routes->post('delete/(:num)', 'AjaxController::delete/$1');
+    $routes->post('create', 'AjaxController::create');
+    $routes->post('update/(:num)', 'AjaxController::update/$1');
+});
+```
+
+#### 8.4 Simple AJAX View
+![Simple AJAX View](screenshots/simple_ajax_view.png)
+*Tampilan sederhana dengan tabel data artikel*
+
+**Fitur:**
+- Tabel responsif dengan 5 artikel (ID 1-5)
+- Loading state saat fetch data
+- Status badge (Published/Draft)
+- Action buttons (View, Edit, Delete)
+- Konfirmasi delete dengan alert
+
+#### 8.5 Advanced AJAX View
+![Advanced AJAX View](screenshots/advanced_ajax_view.png)
+*Tampilan lengkap dengan action bar dan fitur tambahan*
+
+**Fitur Tambahan:**
+- Action bar dengan tombol Refresh dan Load All
+- Alert system dengan auto-hide
+- Smooth animations dan transitions
+- Better error handling
+- Professional styling
+
+#### 8.6 AJAX API Testing
+![AJAX API Test](screenshots/ajax_api_test.png)
+*Testing AJAX endpoints dengan halaman test*
+
+**Endpoints yang ditest:**
+- `GET /ajax/getData` - 5 artikel pertama
+- `GET /ajax/getAllData` - Semua artikel
+- `GET /ajax/getById/1` - Artikel by ID
+- `POST /ajax/delete/1` - Delete artikel
+
+#### 8.7 Responsive Design
+![Responsive Design](screenshots/responsive_design.png)
+*Tampilan responsif di berbagai ukuran layar*
+
+**Breakpoints:**
+- Desktop (>768px): Full layout
+- Tablet (≤768px): Adjusted spacing
+- Mobile (≤480px): Stacked buttons
+
+#### 8.8 Error Handling
+![Error Handling](screenshots/error_handling.png)
+*Error handling dan user feedback*
+
+**Error States:**
+- Network errors
+- Server errors
+- Empty data states
+- Loading states
+
 ---
 
 ## 🎓 Kesimpulan Pembelajaran
@@ -429,21 +784,35 @@ public function add()
 3. **File Upload Management** - Upload, validasi, dan manajemen file
 4. **Database Pagination** - Optimasi query untuk data besar
 5. **Search Functionality** - Filter data dengan multiple criteria
-6. **Responsive Design** - UI yang mobile-friendly
-7. **Error Handling** - Graceful error management
-8. **Security Best Practices** - Validation, sanitization, protection
+6. **AJAX Implementation** - Operasi asynchronous dengan jQuery
+7. **JSON API Development** - RESTful endpoints untuk AJAX
+8. **Responsive Design** - UI yang mobile-friendly dan elegan
+9. **Error Handling** - Graceful error management
+10. **Security Best Practices** - Validation, sanitization, protection
 
 ### **Skills yang Dikembangkan:**
 - ✅ **Backend Development** dengan CodeIgniter 4
+- ✅ **AJAX & jQuery** untuk operasi asynchronous
+- ✅ **JSON API Development** dan response handling
 - ✅ **Database Design** dan optimization
 - ✅ **Frontend Integration** dengan responsive CSS
 - ✅ **File Management** dan security
-- ✅ **User Experience** design
+- ✅ **User Experience** design yang simpel dan elegan
 - ✅ **Testing** dan debugging
 - ✅ **Documentation** dan version control
 
 ### **Hasil Akhir:**
-Aplikasi web lengkap dengan sistem manajemen artikel yang mencakup authentication, CRUD operations, file upload, pagination, search, dan responsive design. Semua modul terintegrasi dengan baik dan siap untuk deployment production.
+Aplikasi web lengkap dengan sistem manajemen artikel yang mencakup:
+- ✅ **Authentication & Authorization** - Login/logout dengan session management
+- ✅ **CRUD Operations** - Create, Read, Update, Delete artikel
+- ✅ **File Upload** - Upload dan manajemen gambar artikel
+- ✅ **Pagination & Search** - Navigasi data yang efisien
+- ✅ **AJAX Implementation** - Operasi real-time tanpa reload halaman
+- ✅ **Responsive Design** - UI yang simpel, elegan, dan mobile-friendly
+- ✅ **API Endpoints** - RESTful JSON API untuk integrasi
+- ✅ **Error Handling** - Graceful error management dan user feedback
+
+Semua modul terintegrasi dengan baik menggunakan arsitektur MVC CodeIgniter 4 dan siap untuk deployment production.
 
 ## Author
 

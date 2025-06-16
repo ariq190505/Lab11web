@@ -45,6 +45,20 @@ $routes->get('simplelogout', 'SimpleLogin::logout');
 $routes->get('dummydata/createImages', 'DummyData::createImages');
 $routes->get('dummydata/createArticles', 'DummyData::createArticles');
 
+// AJAX routes
+$routes->group('ajax', function($routes) {
+    $routes->get('/', 'AjaxController::index');
+    $routes->get('artikel', 'AjaxController::artikel');
+    $routes->get('simple', 'AjaxController::simple');
+    $routes->get('getData', 'AjaxController::getData');
+    $routes->get('getAllData', 'AjaxController::getAllData');
+    $routes->get('getDataRange/(:num)/(:num)', 'AjaxController::getDataRange/$1/$2');
+    $routes->get('getById/(:num)', 'AjaxController::getById/$1');
+    $routes->post('delete/(:num)', 'AjaxController::delete/$1');
+    $routes->post('create', 'AjaxController::create');
+    $routes->post('update/(:num)', 'AjaxController::update/$1');
+});
+
 // Admin routes
 $routes->group('admin', function($routes) {
     $routes->get('artikel', 'Artikel::admin_index');
